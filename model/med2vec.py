@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from base import BaseModel
 __all__ = ['Med2Vec']
 
+
 class Med2Vec(BaseModel):
     def __init__(self, icd9_size, demographics_size=0, embedding_size=2000, hidden_size=100,):
         super(Med2Vec, self).__init__()
@@ -21,14 +22,13 @@ class Med2Vec(BaseModel):
         torch.nn.init.uniform_(self.embedding_w, a=-0.1, b=0.1)
         self.embedding_b = torch.nn.Parameter(torch.Tensor(1, self.embedding_size))
         self.embedding_b.data.fill_(0)
-        self.embedding = nn.Embedding(self.vocabulary_size, self.embedding_size)
+        # self.embedding = nn.Embedding(self.vocabulary_size, self.embedding_size)  # 和下面定义的embedding函数冲突
         self.relu1 = nn.ReLU()
         self.relu2 = nn.ReLU()
         self.linear = nn.Linear(self.embedding_demo_size, self.hidden_size)
         self.probits = nn.Linear(self.hidden_size, self.vocabulary_size)
 
         self.bce_loss = nn.BCEWithLogitsLoss()
-
 
     def embedding(self, x):
         return F.linear(x, self.embedding_w, self.embedding_b)
@@ -38,9 +38,9 @@ class Med2Vec(BaseModel):
         x = self.relu1(x)
         emb = F.relu(self.embedding_w)
 
-        if (self.demographics_size):
+        if self.demographics_size > 0:
             x = torch.cat((x, d), dim=1)
         x = self.linear(x)
         x = self.relu2(x)
         probits = self.probits(x)
-        return probits, emb
+        return probits, emb  # 返回emb是几个意思?

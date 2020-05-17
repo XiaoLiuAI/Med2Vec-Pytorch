@@ -1,6 +1,6 @@
 # Med2Vec in Pytorch
 
-This is a re-implementation of Med2Vec [1] in Pytorch. It simply embeds clinical concepts into a distributed representation using skip-gram model with an aditional code loss.
+This is a re-implementation of Med2Vec [1] in Pytorch. It simply embeds clinical concepts into a distributed representation using skip-gram model with an additional code loss.
 
 To run the code first obtain the `ADMISSION.CSV` and `DIAGNOSES_ICD.CSV` from MIMIC-III database [here](https://mimic.physionet.org/).
 

@@ -61,7 +61,7 @@ class Med2VecTrainer(BaseTrainer):
             loss.backward()
             self.optimizer.step()
 
-            self.writer.set_step((epoch - 1) * len(self.data_loader) + batch_idx)
+            # self.writer.set_step((epoch - 1) * len(self.data_loader) + batch_idx)
             self.writer.add_scalar('loss', loss.item())
             total_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask, k=self.config['trainer']['recall_k'])
 
@@ -109,7 +109,7 @@ class Med2VecTrainer(BaseTrainer):
                 probits, emb_w = self.model(data.float(), d)
                 loss_dict = self.loss(data, mask.float(), probits, self.model.bce_loss, emb_w, ivec, jvec, window=self.config["loss_window"])
                 loss = loss_dict['visit_loss'] + loss_dict['code_loss']
-                self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
+                # self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 self.writer.add_scalar('loss', loss.item())
                 total_val_loss += loss.item()
                 total_val_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask, k=self.config['trainer']['recall_k'])

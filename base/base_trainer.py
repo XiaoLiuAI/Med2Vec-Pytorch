@@ -5,7 +5,8 @@ import logging
 import datetime
 import torch
 from utils.util import ensure_dir
-from utils.visualization import WriterTensorboardX
+from torch.utils.tensorboard import SummaryWriter
+# from utils.visualization import WriterTensorboardX
 
 
 class BaseTrainer:
@@ -51,7 +52,8 @@ class BaseTrainer:
         self.checkpoint_dir = os.path.join(cfg_trainer['save_dir'], config['name'], start_time)
         # setup visualization writer instance
         writer_dir = os.path.join(cfg_trainer['log_dir'], config['name'], start_time)
-        self.writer = WriterTensorboardX(writer_dir, self.logger, cfg_trainer['tensorboardX'])
+        # self.writer = WriterTensorboardX(writer_dir, self.logger, cfg_trainer['tensorboardX'])
+        self.writer = SummaryWriter()
 
         # Save configuration file into checkpoint directory:
         ensure_dir(self.checkpoint_dir)
@@ -127,7 +129,6 @@ class BaseTrainer:
 
             if epoch % self.save_period == 0:
                 self._save_checkpoint(epoch, save_best=best)
-            
 
     def _train_epoch(self, epoch):
         """

@@ -6,22 +6,24 @@ import os
 import json
 import argparse
 import torch
-import data_loader.data_loaders as module_data
+import data_loader.data_loaders as data_module
 import model.loss as module_loss
 import model.metric as module_metric
 import model.med2vec as module_arch
 from trainer import Med2VecTrainer as Trainer
-from utils import Logger
+# from utils import Logger
 
 
 def get_instance(module, name, config, *args):
     return getattr(module, config[name]['type'])(*args, **config[name]['args'])
 
+
 def main(config, resume):
-    train_logger = Logger()
+    # train_logger = Logger()
+    train_logger = None
 
     # setup data_loader instances
-    data_loader = get_instance(module_data, 'data_loader', config)
+    data_loader = get_instance(data_module, 'data_loader', config)
     valid_data_loader = data_loader.split_validation()
 
     # build model architecture
@@ -47,6 +49,7 @@ def main(config, resume):
 
     trainer.train()
 
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Template')
     parser.add_argument('-c', '--config', default=None, type=str,
@@ -70,5 +73,5 @@ if __name__ == '__main__':
 
     if args.device:
         os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-    #torch.set_default_tensor_type(torch.cuda.FloatTensor if args.device else torch.FloatTensor)
+    # torch.set_default_tensor_type(torch.cuda.FloatTensor if args.device else torch.FloatTensor)
     main(config, args.resume)

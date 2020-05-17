@@ -12,6 +12,8 @@ import os
 import sys
 from data_loader.utils.vocab import Vocab
 from tqdm import tqdm
+
+
 def convert_to_med2vec(patient_data):
     data = []
     for k, vv in patient_data.items():
@@ -19,6 +21,7 @@ def convert_to_med2vec(patient_data):
             data.append(v[0])
         data.append([-1])
     return data
+
 
 if __name__ == '__main__':
     diagnosis_file = sys.argv[1]
