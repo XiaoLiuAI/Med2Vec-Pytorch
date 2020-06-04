@@ -11,6 +11,7 @@ import model.loss as module_loss
 import model.metric as module_metric
 import model.med2vec as module_arch
 from trainer import Med2VecTrainer as Trainer
+import logging
 # from utils import Logger
 
 
@@ -19,16 +20,18 @@ def get_instance(module, name, config, *args):
 
 
 def main(config, resume):
+    logging.basicConfig(level=config['logging_level'])
     # train_logger = Logger()
     train_logger = None
 
     # setup data_loader instances
+    logging.info('loading data ...')
     data_loader = get_instance(data_module, 'data_loader', config)
     valid_data_loader = data_loader.split_validation()
 
     # build model architecture
-    model = get_instance(module_arch, 'arch', config)
-    print(model)
+    model = get_instance(module_arch, 'model', config)
+    logging.info(f'initialize model \n{model}')
 
     # get function handles of loss and metrics
     loss = getattr(module_loss, config['loss'])
@@ -47,6 +50,7 @@ def main(config, resume):
                       lr_scheduler=lr_scheduler,
                       train_logger=train_logger)
 
+    logging.info('training ...')
     trainer.train()
 
 

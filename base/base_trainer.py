@@ -34,6 +34,9 @@ class BaseTrainer:
         self.verbosity = cfg_trainer['verbosity']
         self.monitor = cfg_trainer.get('monitor', 'off')
 
+        """
+        添加一些过程参数监控，checkpoint存储，训练超参数存储(版本控制)，断点重启的代码
+        """
         # configuration to monitor model performance and save best
         if self.monitor == 'off':
             self.mnt_mode = 'off'
@@ -44,7 +47,7 @@ class BaseTrainer:
 
             self.mnt_best = math.inf if self.mnt_mode == 'min' else -math.inf
             self.early_stop = cfg_trainer.get('early_stop', math.inf)
-        
+
         self.start_epoch = 1
 
         # setup directory for checkpoint saving
@@ -53,21 +56,24 @@ class BaseTrainer:
         # setup visualization writer instance
         writer_dir = os.path.join(cfg_trainer['log_dir'], config['name'], start_time)
         # self.writer = WriterTensorboardX(writer_dir, self.logger, cfg_trainer['tensorboardX'])
-        self.writer = SummaryWriter()
+        # self.writer = SummaryWriter()
 
         # Save configuration file into checkpoint directory:
         ensure_dir(self.checkpoint_dir)
         config_save_path = os.path.join(self.checkpoint_dir, 'config.json')
+        if not os.path.exists(self.checkpoint_dir):
+            os.makedirs(self.checkpoint_dir)
         with open(config_save_path, 'w') as handle:
             json.dump(config, handle, indent=4, sort_keys=False)
 
         if resume:
             self._resume_checkpoint(resume)
-    
+
     def _prepare_device(self, n_gpu_use):
-        """ 
+        """
         setup GPU device if available, move model into configured device
-        """ 
+        只能使用最多一个GPU
+        """
         n_gpu = torch.cuda.device_count()
         if n_gpu_use > 0 and n_gpu == 0:
             self.logger.warning("Warning: There\'s no GPU available on this machine, training will be performed on CPU.")
@@ -85,17 +91,18 @@ class BaseTrainer:
         """
         for epoch in range(self.start_epoch, self.epochs + 1):
             result = self._train_epoch(epoch)
-            
+
             # save logged informations into log dict
             log = {'epoch': epoch}
             for key, value in result.items():
                 if key == 'metrics':
-                    log.update({mtr.__name__ : value[i] for i, mtr in enumerate(self.metrics)})
+                    log.update({mtr.__name__: value[i] for i, mtr in enumerate(self.metrics)})
                 elif key == 'val_metrics':
-                    log.update({'val_' + mtr.__name__ : value[i] for i, mtr in enumerate(self.metrics)})
+                    log.update({'val_' + mtr.__name__: value[i] for i, mtr in enumerate(self.metrics)})
                 else:
                     log[key] = value
 
+            self.logger.info(f'train_log: {log}')
             # print logged informations to the screen
             if self.train_logger is not None:
                 self.train_logger.add_entry(log)
@@ -120,15 +127,18 @@ class BaseTrainer:
                     self.mnt_best = log[self.mnt_metric]
                     not_improved_count = 0
                     best = True
+                    self.logger.info(f"update best epoch according to {self.mnt_metric}")
                 else:
                     not_improved_count += 1
 
                 if not_improved_count > self.early_stop:
+                    """early stop 只有在 mnt_mode 下才会起作用"""
                     self.logger.info("Validation performance didn\'t improve for {} epochs. Training stops.".format(self.early_stop))
                     break
 
             if epoch % self.save_period == 0:
                 self._save_checkpoint(epoch, save_best=best)
+                "每save_period个epoch存储一次，同时把最好的那个改名叫model_best"
 
     def _train_epoch(self, epoch):
         """
@@ -181,12 +191,12 @@ class BaseTrainer:
                                 'This may yield an exception while state_dict is being loaded.')
         self.model.load_state_dict(checkpoint['state_dict'])
 
-        # load optimizer state from checkpoint only when optimizer type is not changed. 
+        # load optimizer state from checkpoint only when optimizer type is not changed.
         if checkpoint['config']['optimizer']['type'] != self.config['optimizer']['type']:
             self.logger.warning('Warning: Optimizer type given in config file is different from that of checkpoint. ' + \
                                 'Optimizer parameters not being resumed.')
         else:
             self.optimizer.load_state_dict(checkpoint['optimizer'])
-    
+
         self.train_logger = checkpoint['logger']
         self.logger.info("Checkpoint '{}' (epoch {}) loaded".format(resume_path, self.start_epoch))

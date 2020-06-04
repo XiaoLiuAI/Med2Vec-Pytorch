@@ -6,7 +6,7 @@
 import torch
 
 
-def recall_k(output, target, mask, k=10, window=1):  # 所谓skip-gram的设定，完全靠metric来实现，model本身其实极其简单
+def recall_k(output, target, mask, k=10, window=1):
     bsz = output.shape[0]
     idx = torch.arange(0, bsz, device=output.device)
 

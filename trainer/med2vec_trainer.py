@@ -30,7 +30,7 @@ class Med2VecTrainer(BaseTrainer):
         acc_metrics = np.zeros(len(self.metrics))
         for i, metric in enumerate(self.metrics):
             acc_metrics[i] += metric(output, target, **kwargs)
-            self.writer.add_scalar(f'{metric.__name__}', acc_metrics[i])
+            self.logger.info(f'{metric.__name__} {acc_metrics[i]}')
         return acc_metrics
 
     def _train_epoch(self, epoch):
@@ -49,22 +49,25 @@ class Med2VecTrainer(BaseTrainer):
 
             The metrics in log must have the key 'metrics'.
         """
-        self.model.train()
+        self.model.train()  # PyTorch的设计，要设定model的模式，来开启dropout等特殊层
         total_loss = 0
         total_metrics = np.zeros(len(self.metrics))
         for batch_idx, (x, ivec, jvec, mask, d) in enumerate(self.data_loader):
-            data, ivec, jvec, mask, d  = x.to(self.device), ivec.to(self.device), jvec.to(self.device), mask.to(self.device), d.to(self.device)
+            data, ivec, jvec, mask, d = x.to(self.device), ivec.to(self.device), jvec.to(self.device), mask.to(self.device), d.to(self.device)
             self.optimizer.zero_grad()
-            probits, emb_w = self.model(data.float(), d)
+            probits, emb_w = self.model(data.float(), d)  # 每个visit的预测输出
+            # 计算输出到周围visit的loss TODO med2vec_loss
             loss_dict = self.loss(data, mask.float(), probits, self.model.bce_loss, emb_w, ivec, jvec, window=self.config["loss_window"])
-            loss = loss_dict['visit_loss'] + loss_dict['code_loss']
-            loss.backward()
-            self.optimizer.step()
+            loss = loss_dict['visit_loss'] + loss_dict['code_loss']  # 不同级别的loss相加
+            loss.backward()  # 前馈计算梯度
+            self.optimizer.step()  # 更新参数
 
             # self.writer.set_step((epoch - 1) * len(self.data_loader) + batch_idx)
-            self.writer.add_scalar('loss', loss.item())
+            # 记录结果
+            self.logger.info(f'train: loss {loss.item()}, visit loss {loss_dict["visit_loss"]}, code loss {loss_dict["code_loss"]}')
             total_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask, k=self.config['trainer']['recall_k'])
 
+            self.logger.info(f'batch {batch_idx} in epoch {epoch}...')
             if self.verbosity >= 2 and (batch_idx % self.log_step == 0):
                 self.logger.info('Train Epoch: {} [{}/{} ({:.0f}%)] {}: {:.6f}, {}: {:.6f}'.format(
                     epoch,
@@ -73,12 +76,15 @@ class Med2VecTrainer(BaseTrainer):
                     100.0 * batch_idx / len(self.data_loader),
                     'visit_loss', loss_dict['visit_loss'],
                     'code_loss', loss_dict['code_loss']))
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
 
             total_loss += loss_dict['visit_loss'].detach() + loss_dict['code_loss'].detach()
 
+            if batch_idx == 10:
+                break
+
         log = {
-            'loss': total_loss / len(self.data_loader),
+            'loss': total_loss / len(self.data_loader),  # log 一个epoch的平均 loss
             'metrics': (total_metrics / len(self.data_loader)).tolist()
         }
 
@@ -86,6 +92,7 @@ class Med2VecTrainer(BaseTrainer):
             val_log = self._valid_epoch(epoch)
             log = {**log, **val_log}
 
+        """调整 learning rate"""
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
 
@@ -105,15 +112,19 @@ class Med2VecTrainer(BaseTrainer):
         total_val_metrics = np.zeros(len(self.metrics))
         with torch.no_grad():
             for batch_idx, (x, ivec, jvec, mask, d) in enumerate(self.valid_data_loader):
+                self.logger.info(f'batch {batch_idx} in validation')
                 data, ivec, jvec, mask, d = x.to(self.device), ivec.to(self.device), jvec.to(self.device), mask.to(self.device), d.to(self.device)
                 probits, emb_w = self.model(data.float(), d)
                 loss_dict = self.loss(data, mask.float(), probits, self.model.bce_loss, emb_w, ivec, jvec, window=self.config["loss_window"])
                 loss = loss_dict['visit_loss'] + loss_dict['code_loss']
+                self.logger.info(f'valid: loss {loss}, visit loss {loss_dict["visit_loss"]}, code loss {loss_dict["code_loss"]}')
                 # self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
-                self.writer.add_scalar('loss', loss.item())
+                # self.writer.add_scalar('loss', loss.item())
                 total_val_loss += loss.item()
                 total_val_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask, k=self.config['trainer']['recall_k'])
-                self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
+                if batch_idx==10:
+                    break
 
         return {
             'val_loss': total_val_loss / len(self.valid_data_loader),

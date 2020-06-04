@@ -22,6 +22,9 @@ class Med2VecDataset(data.Dataset):
             raise ValueError('cannot download')
 
         self.train_data = pickle.load(open(root, 'rb'))
+        """
+        train_data 是一个list,每个元素都是list of indices of codes
+        """
         self.test_data = []
 
     def __len__(self):
@@ -38,7 +41,7 @@ class Med2VecDataset(data.Dataset):
         """ create one hot vector of idx in seq, with length self.num_codes
 
             Args:
-                seq: list of ideces where code should be 1
+                seq: list of indices where code should be 1
 
             Returns:
                 x: one hot vector
@@ -86,7 +89,7 @@ def collate_fn(data):
     mask = mask[:, None]  # additional dimension
     ivec = torch.cat(ivec, dim=0)  # list of list 接起来变成一个list
     jvec = torch.cat(jvec, dim=0)
-    d = torch.stack(d, dim=0)
+    d = torch.stack([torch.tensor(_) for _ in d], dim=0)
 
     return x, ivec, jvec, mask, d
 
