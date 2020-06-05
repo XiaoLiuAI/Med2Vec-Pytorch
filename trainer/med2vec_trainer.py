@@ -81,8 +81,8 @@ class Med2VecTrainer(BaseTrainer):
 
             total_loss += loss_dict['visit_loss'].detach() + loss_dict['code_loss'].detach()
 
-            if batch_idx == 10:
-                break
+            # if batch_idx == 10:
+            #     break
 
         log = {
             'loss': total_loss / len(self.data_loader),  # log 一个epoch的平均 loss
@@ -122,7 +122,8 @@ class Med2VecTrainer(BaseTrainer):
                 # self.writer.set_step((epoch - 1) * len(self.valid_data_loader) + batch_idx, 'valid')
                 # self.writer.add_scalar('loss', loss.item())
                 total_val_loss += loss.item()
-                total_val_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask, k=self.config['trainer']['recall_k'])
+                total_val_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask,
+                                                        **self.config['trainer']['metrics_args'])
                 # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
                 if batch_idx==10:
                     break

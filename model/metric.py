@@ -4,10 +4,18 @@
 #################################################################
 
 import torch
-import statistics
 
 
 def recall_k(output, target, mask, k=10, window=1):
+    """
+    用一次visit的所有code，进行信息压缩之后，预测下一次visit的所有code,计算topK预测code和下一次visit的code的重合比例
+    :param output:
+    :param target:
+    :param mask:
+    :param k:
+    :param window:
+    :return:
+    """
     bsz = output.shape[0]
     idx = torch.arange(0, bsz, device=output.device)
 
