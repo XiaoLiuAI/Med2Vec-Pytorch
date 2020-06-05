@@ -1,6 +1,4 @@
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 
 
 def med2vec_loss(inputs, mask, probits, bce_loss, emb_w, ivec, jvec, window=1, eps=1.0e-8):
@@ -18,7 +16,7 @@ def med2vec_loss(inputs, mask, probits, bce_loss, emb_w, ivec, jvec, window=1, e
         """
         loss = 0
         for i in range(1, window+1):
-            if loss != loss:
+            if loss != loss:  # TODO 这是什么鬼？
                 import pdb; pdb.set_trace()
             l = mask.shape[0]
             _shape = list(mask.shape)
@@ -35,7 +33,7 @@ def med2vec_loss(inputs, mask, probits, bce_loss, emb_w, ivec, jvec, window=1, e
     def code_loss(emb_w, ivec, jvec, eps=1.e-6):
         """
         :param emb_w: 医学概念向量
-        :param ivec: 同一个visit里面的i，j vector？TODO
+        :param ivec: 同一个visit里面的i，j vector, 既一次admission/visit中的code对，zip(ivec, jvec) = list of pair of codes
         :param jvec:
         :param eps:
         :return:

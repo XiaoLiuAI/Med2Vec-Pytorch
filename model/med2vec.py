@@ -43,4 +43,4 @@ class Med2Vec(BaseModel):
         x = self.linear(x)
         x = self.relu2(x)
         probits = self.probits(x)
-        return probits, emb  # 返回emb是几个意思?
+        return probits, emb  # 返回emb是为了计算code loss
