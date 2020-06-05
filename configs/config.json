@@ -34,7 +34,7 @@
     "loss": "med2vec_loss",
     "loss_window": 5, 
     "metrics": [
-         "recall_k"
+         "recall_k_corrected"
     ],
     "lr_scheduler": {
         "type": "StepLR",
@@ -57,6 +57,9 @@
         "tensorboardX": false,
         "log_dir": "saved/runs",
 
-        "recall_k": 10
+        "metrics_args": {
+            "k": 10,
+            "window": 1
+        }
     }
 }

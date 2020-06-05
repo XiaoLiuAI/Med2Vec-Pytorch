@@ -21,7 +21,7 @@ def med2vec_loss(inputs, mask, probits, bce_loss, emb_w, ivec, jvec, window=1, e
             l = mask.shape[0]
             _shape = list(mask.shape)
             _shape[0] = l-i
-            maski = torch.ones(_shape).to(mask.device)
+            maski = torch.ones(_shape, device=mask.device)
             for j in range(0, i+1):
                 maski = maski * mask[i-j:l-j]  # 滑动mask
             backward_preds = probits[i:] * maski  # 向后预测的目标

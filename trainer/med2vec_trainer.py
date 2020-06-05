@@ -65,7 +65,8 @@ class Med2VecTrainer(BaseTrainer):
             # self.writer.set_step((epoch - 1) * len(self.data_loader) + batch_idx)
             # 记录结果
             self.logger.info(f'train: loss {loss.item()}, visit loss {loss_dict["visit_loss"]}, code loss {loss_dict["code_loss"]}')
-            total_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask, k=self.config['trainer']['recall_k'])
+            total_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask,
+                                                **self.config['trainer']['metrics_args'])  # TODO 实现不同metric不同的args
 
             self.logger.info(f'batch {batch_idx} in epoch {epoch}...')
             if self.verbosity >= 2 and (batch_idx % self.log_step == 0):
