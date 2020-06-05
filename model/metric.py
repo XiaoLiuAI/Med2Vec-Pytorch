@@ -67,14 +67,14 @@ def recall_k_corrected(output, target, mask, k=10, window=1):
         """
         每个visit都是一个one-hot编码的向量，所以直接编码了一次visit里出现的所有code，也意味着多次发生的code只会记一次
         """
-        output = output[input_mask, :]  # 输出的visit code
-        output = output.float()
-        target = target[target_mask, :]  # 正确的visit code
-        target = target.float()
+        masked_output = output[input_mask, :]  # 输出的visit code
+        masked_output = masked_output.float()
+        masked_target = target[target_mask, :]  # 正确的visit code
+        masked_target = masked_target.float()
 
-        _, tk = torch.topk(output, k)  # 输出的visit code的top k
-        tt = torch.gather(target, 1, tk)  # topk 在target中的值,既topk的预测，在实际target中是1还是0
-        r = torch.mean(torch.sum(tt, dim=1) / torch.sum(target, dim=1))  # 实际上topk命中target中出现的code的比例
+        _, tk = torch.topk(masked_output, k)  # 输出的visit code的top k
+        tt = torch.gather(masked_target, 1, tk)  # topk 在target中的值,既topk的预测，在实际target中是1还是0
+        r = torch.mean(torch.sum(tt, dim=1) / torch.sum(masked_target, dim=1))  # 实际上topk命中target中出现的code的比例
         rates.append(r)
     return torch.tensor(rates, device=output.device).mean()
 

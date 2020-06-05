@@ -59,7 +59,7 @@
 
         "metrics_args": {
             "k": 10,
-            "window": 1
+            "window": 3
         }
     }
 }
