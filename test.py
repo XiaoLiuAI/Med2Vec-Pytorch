@@ -77,6 +77,6 @@ if __name__ == '__main__':
     if args.resume:
         config = torch.load(args.resume)['config']
     if args.device:
-        os.environ["CUDA_VISIBLE_DEVICES"]=args.device
+        os.environ["CUDA_VISIBLE_DEVICES"] = args.device
 
     main(config, args.resume)

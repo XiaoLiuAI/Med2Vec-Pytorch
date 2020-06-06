@@ -5,7 +5,7 @@
 
 import numpy as np
 import torch
-from torchvision.utils import make_grid
+
 from base import BaseTrainer
 
 
@@ -52,6 +52,9 @@ class Med2VecTrainer(BaseTrainer):
         self.model.train()  # PyTorch的设计，要设定model的模式，来开启dropout等特殊层
         total_loss = 0
         total_metrics = np.zeros(len(self.metrics))
+        """
+        trainer相对于一般的训练过程的不同点在于这个特殊任务计算loss需要特别的输入和输出整合
+        """
         for batch_idx, (x, ivec, jvec, mask, d) in enumerate(self.data_loader):
             data, ivec, jvec, mask, d = x.to(self.device), ivec.to(self.device), jvec.to(self.device), mask.to(self.device), d.to(self.device)
             self.optimizer.zero_grad()

@@ -8,6 +8,8 @@ from torch.utils.data.sampler import SequentialSampler
 class BaseDataLoader(DataLoader):
     """
     Base class for all data loaders
+    在torch本身的 dataloader 基础上包装了 validation split 这个功能,
+    通过额外的 api 返回 validation set 的 dataloader
     """
     def __init__(self, dataset, batch_size, shuffle, validation_split, num_workers, collate_fn=default_collate):
         self.validation_split = validation_split
@@ -21,19 +23,24 @@ class BaseDataLoader(DataLoader):
         self.init_kwargs = {
             'dataset': dataset,
             'batch_size': batch_size,
-            'shuffle': self.shuffle,
+            'shuffle': shuffle,
             'collate_fn': collate_fn,
             'num_workers': num_workers
             }
         super(BaseDataLoader, self).__init__(sampler=self.sampler, **self.init_kwargs)
 
     def _split_sampler(self, split):
+        """
+        通过不同的 sampler 来实现数据集分割
+        :param split:
+        :return:
+        """
         if split == 0.0:
             return None, None
         idx_full = np.arange(self.n_samples)
         # shuffle indexes only if shuffle is true
         # added for med2vec dataset where order matters
-        if (self.shuffle):
+        if self.shuffle:
             np.random.seed(0)
             np.random.shuffle(idx_full)
 
