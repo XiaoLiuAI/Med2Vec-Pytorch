@@ -127,7 +127,7 @@ class BaseTrainer:
                     self.mnt_best = log[self.mnt_metric]
                     not_improved_count = 0
                     best = True
-                    self.logger.info(f"update best epoch according to {self.mnt_metric}")
+                    self.logger.info(f"update best epoch according to {self.mnt_metric} = {self.mnt_best}")
                 else:
                     not_improved_count += 1
 
