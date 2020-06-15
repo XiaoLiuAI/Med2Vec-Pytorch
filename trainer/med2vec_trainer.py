@@ -84,9 +84,6 @@ class Med2VecTrainer(BaseTrainer):
 
             total_loss += loss_dict['visit_loss'].detach() + loss_dict['code_loss'].detach()
 
-            # if batch_idx == 10:
-            #     break
-
         log = {
             'loss': total_loss / len(self.data_loader),  # log 一个epoch的平均 loss
             'metrics': (total_metrics / len(self.data_loader)).tolist()
@@ -128,8 +125,6 @@ class Med2VecTrainer(BaseTrainer):
                 total_val_metrics += self._eval_metrics(probits.detach(), data.detach(), mask=mask,
                                                         **self.config['trainer']['metrics_args'])
                 # self.writer.add_image('input', make_grid(data.cpu(), nrow=8, normalize=True))
-                if batch_idx==10:
-                    break
 
         return {
             'val_loss': total_val_loss / len(self.valid_data_loader),
